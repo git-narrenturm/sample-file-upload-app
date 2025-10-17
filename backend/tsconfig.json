@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2020"],
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "baseUrl": ".",
+    "paths": {
+      "@root/*": ["./*.js"],
+      "@entities/*": ["src/entities/*.js"],
+      "@controllers/*": ["src/controllers/*.js"],
+      "@routes/*": ["src/routes/*.js"],
+      "@database/*": ["src/database/*.js"],
+      "@srv/*": ["src/srv/*.js"]
+    }
+  },
+  "include": ["./**/*.ts"]
+}

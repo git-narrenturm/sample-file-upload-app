@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    image: file-upload-app-backend:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env
+    networks:
+      - file-upload-app-network
+    command: npx tsx src/server.ts
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+
+  db:
+    image: mysql:8.0
+    restart: always
+    env_file:
+      - ./db/.env
+    ports:
+      - "3306:3306"
+    networks:
+      - file-upload-app-network
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+networks:
+  file-upload-app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
