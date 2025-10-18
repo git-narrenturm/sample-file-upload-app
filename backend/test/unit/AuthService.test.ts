@@ -2,6 +2,8 @@ import { User } from "@entities/User";
 
 import { AuthService } from "@srv/AuthService";
 
+import { UserDTO } from "@customtypes/authTypes";
+
 describe("AuthService", () => {
   let authService: AuthService;
   let userRepoMock: any;
@@ -16,7 +18,7 @@ describe("AuthService", () => {
     authService = new AuthService(userRepoMock);
   });
 
-  describe("Sign-up method", () => {
+  describe("handleUserSignUp", () => {
     const id = "test@test.test";
     const password = "someStrongPassword";
 
@@ -49,7 +51,7 @@ describe("AuthService", () => {
     });
   });
 
-  describe("Sign-in method", () => {
+  describe("handleUserSignIn", () => {
     const id = "test@test.test";
     const password = "someStrongPassword";
 
@@ -67,6 +69,31 @@ describe("AuthService", () => {
       await expect(authService.handleUserSignIn(id, password)).rejects.toThrow(
         "User does not exist"
       );
+    });
+  });
+
+  describe("getUserData", () => {
+    const id = "test@test.com";
+
+    it("should return user data if user exists", async () => {
+      userRepoMock.findOneBy.mockResolvedValue({
+        id,
+        password: "hashedPassword",
+      } as User);
+
+      const result: UserDTO | null = await authService.getUserData(id);
+
+      expect(userRepoMock.findOneBy).toHaveBeenCalledWith({ id });
+      expect(result).toEqual({ id });
+    });
+
+    it("should return null if user does not exist", async () => {
+      userRepoMock.findOneBy.mockResolvedValue(null);
+
+      const result: UserDTO | null = await authService.getUserData(id);
+
+      expect(userRepoMock.findOneBy).toHaveBeenCalledWith({ id });
+      expect(result).toBeNull;
     });
   });
 });

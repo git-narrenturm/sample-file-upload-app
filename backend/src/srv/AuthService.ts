@@ -5,6 +5,8 @@ import bcrypt from "bcryptjs";
 import { Repository } from "typeorm";
 import { User } from "@entities/User";
 
+import { UserDTO } from "@customtypes/authTypes";
+
 dotenv.config();
 
 export class AuthService {
@@ -34,6 +36,15 @@ export class AuthService {
       return null;
     }
     return user;
+  }
+
+  private async getUserDTOById(id: string): Promise<UserDTO | null> {
+    const user = await this.userRepo.findOneBy({ id });
+    if (!user) {
+      return null;
+    }
+    const { password, ...userDTO } = user;
+    return userDTO;
   }
 
   private async generateToken(id: string) {
@@ -86,9 +97,8 @@ export class AuthService {
     return { ...token };
   }
 
-
   async getUserData(id: string) {
-    return this.getUserById(id)
+    return await this.getUserDTOById(id);
   }
 
   async handleUserLogout() {}
