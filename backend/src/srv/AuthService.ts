@@ -97,6 +97,9 @@ export class AuthService {
     return { ...token };
   }
 
+  /**
+   * находит пользователя по id
+   */
   async getUserData(id: string) {
     return await this.getUserDTOById(id);
   }

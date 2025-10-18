@@ -7,7 +7,8 @@ import cors from "cors";
 
 import { initializeDatabase } from "@root/ormconfig";
 
-import authRoute from "./routes/authRoute.js";
+import authRoute from "@routes/authRoute";
+import fileRoute from "@routes/fileRoute";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 
 await initializeDatabase();
 authRoute(app);
+fileRoute(app);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

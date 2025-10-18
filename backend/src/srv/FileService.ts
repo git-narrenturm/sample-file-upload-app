@@ -1,0 +1,89 @@
+import dotenv from "dotenv";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import path from "path";
+
+import { Request, Response } from "express";
+
+import { Repository } from "typeorm";
+import { File } from "@entities/File";
+import { FileDTO } from "../types/fileTypes.js";
+
+dotenv.config();
+
+interface FileInput {
+  filename: string;
+  mimeType: string;
+  size: number;
+  data: Buffer;
+}
+
+export class FileService {
+  private fileRepo: Repository<File>;
+
+  constructor(fileRepo: Repository<File>) {
+    this.fileRepo = fileRepo;
+  }
+
+  private async getFileById(id: string): Promise<File | null> {
+    const file = await this.fileRepo.findOneBy({ id });
+    if (!file) {
+      return null;
+    }
+    return file;
+  }
+
+  /**
+   * сохраняет файл
+   */
+  async handleFileUpload({ filename, mimeType, size, data }: FileInput) {
+    const extension = path.extname(filename).slice(1);
+
+    const newFile = this.fileRepo.create({
+      filename,
+      extension,
+      mimeType,
+      size,
+      data,
+    });
+
+    return await this.fileRepo.save(newFile);
+  }
+
+  async handleFileDownload() {}
+
+  async handleFileUpdate() {}
+
+  /**
+   * удаляет файл по id
+   */
+  async handleFileDelete(id: string) {
+    const result = await this.fileRepo.delete({ id });
+    if (result.affected === 0) {
+      throw new Error("File not found");
+    }
+
+    return true;
+  }
+
+  /**
+   * находит файл по id 
+   */
+  async getFile(id: string) {
+    return await this.getFileById(id);
+  }
+
+  /**
+   * выводит список файлов
+   */
+  async getFileList(page: number, size: number) {
+    const skip = (page - 1) * size;
+
+    const [files, total] = await this.fileRepo.findAndCount({
+      skip,
+      take: size,
+      order: { createdAt: "DESC" },
+    });
+    return { total, page, size, files };
+  }
+}
