@@ -2,9 +2,7 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-import { Request, Response } from "express";
 import { Repository } from "typeorm";
-
 import { User } from "@entities/User";
 
 dotenv.config();
@@ -28,7 +26,7 @@ export class AuthService {
   }
 
   // метод для проверки формата логина (email или номер телефона)
-  private validateId(req: Request, res: Response) {}
+  private validateId(id: string) {}
 
   private async getUserById(id: string): Promise<User | null> {
     const user = await this.userRepo.findOneBy({ id });
@@ -49,7 +47,7 @@ export class AuthService {
   /**
    * Регистрирует нового пользователя
    */
-  async signUp(id: string, password: string) {
+  async handleUserSignUp(id: string, password: string) {
     this.validateCredentials(id, password);
 
     // ищем пользователя в БД
@@ -69,7 +67,7 @@ export class AuthService {
   /**
    * Аутентификация
    */
-  async signIn(id: string, password: string) {
+  async handleUserSignIn(id: string, password: string) {
     this.validateCredentials(id, password);
 
     // проверяем, существует ли пользователь
@@ -85,18 +83,15 @@ export class AuthService {
     }
 
     const token = await this.generateToken(user.id);
-    return { id: user.id, ...token };
+    return { ...token };
   }
 
-  async logout() {}
 
-  /**
-   *
-   */
-  async getUserFromToken(token: string) {
-    if(!token) throw new Error ("Authorization token is required");
-
+  async getUserData(id: string) {
+    return this.getUserById(id)
   }
 
-  async refresh() {}
+  async handleUserLogout() {}
+
+  async handleTokenRefresh() {}
 }

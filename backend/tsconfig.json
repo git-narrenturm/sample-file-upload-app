@@ -19,7 +19,9 @@
       "@controllers/*": ["src/controllers/*.js"],
       "@routes/*": ["src/routes/*.js"],
       "@database/*": ["src/database/*.js"],
-      "@srv/*": ["src/srv/*.js"]
+      "@srv/*": ["src/srv/*.js"],
+      "@middleware/*": ["src/middleware/*.js"],
+      "@customtypes/*": ["src/types/*.js"]
     }
   },
   "include": ["./**/*.ts"]

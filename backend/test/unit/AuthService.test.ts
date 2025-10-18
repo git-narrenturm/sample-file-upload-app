@@ -21,10 +21,10 @@ describe("AuthService", () => {
     const password = "someStrongPassword";
 
     it("should throw an error if id or password is missing", async () => {
-      await expect(authService.signUp("", password)).rejects.toThrow(
+      await expect(authService.handleUserSignUp("", password)).rejects.toThrow(
         "ID and password are required"
       );
-      await expect(authService.signUp(id, "")).rejects.toThrow(
+      await expect(authService.handleUserSignUp(id, "")).rejects.toThrow(
         "ID and password are required"
       );
     });
@@ -34,7 +34,7 @@ describe("AuthService", () => {
       userRepoMock.create.mockImplementation((user: Partial<User>) => user);
       userRepoMock.save.mockResolvedValue(true);
 
-      const result = await authService.signUp(id, password);
+      const result = await authService.handleUserSignUp(id, password);
 
       expect(userRepoMock.findOneBy).toHaveBeenCalledWith({ id });
       expect(result).toEqual({ message: "User successfully created" });
@@ -44,7 +44,7 @@ describe("AuthService", () => {
       userRepoMock.findOneBy.mockResolvedValue({ id });
 
       await expect(
-        authService.signUp(id, "anotherStrongPassword")
+        authService.handleUserSignUp(id, "anotherStrongPassword")
       ).rejects.toThrow("User already exists");
     });
   });
@@ -54,17 +54,17 @@ describe("AuthService", () => {
     const password = "someStrongPassword";
 
     it("should throw an error if id or password is missing", async () => {
-      await expect(authService.signUp("", password)).rejects.toThrow(
+      await expect(authService.handleUserSignIn("", password)).rejects.toThrow(
         "ID and password are required"
       );
-      await expect(authService.signUp(id, "")).rejects.toThrow(
+      await expect(authService.handleUserSignIn(id, "")).rejects.toThrow(
         "ID and password are required"
       );
     });
 
     it("should throw an error if user not found", async () => {
       userRepoMock.findOneBy.mockResolvedValue(null);
-      await expect(authService.signIn(id, password)).rejects.toThrow(
+      await expect(authService.handleUserSignIn(id, password)).rejects.toThrow(
         "User does not exist"
       );
     });
