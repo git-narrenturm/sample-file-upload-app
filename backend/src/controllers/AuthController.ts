@@ -7,7 +7,7 @@ import { User } from "@entities/User";
 
 import { AuthService } from "@srv/AuthService";
 import { AuthenticatedRequest } from "@customtypes/authTypes";
-import { Session } from "../entities/Session.js";
+import { Session } from "@entities/Session";
 
 dotenv.config();
 
@@ -69,7 +69,7 @@ export class AuthController {
       // на случай, если пользователь был удален, а токен еще не протух
       const user = await this.authService.getUserData(req.user.id);
       if (!user) {
-        return res.status(400).json({ error: "User not found " });
+        return res.status(400).json({ error: "User not found" });
       }
 
       // возвращаем id пользователя
