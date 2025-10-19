@@ -91,9 +91,10 @@ export class AuthService {
     // хешируем пароль и создаем нового пользователя
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = this.userRepo.create({ id, password: hashedPassword });
-    await this.userRepo.save(newUser);
-
-    return { message: "User successfully created" };
+    const result = await this.userRepo.save(newUser);
+    // возвращаем данные созданного пользователя, исключая пароль и сессии
+    const { password: _, sessions: __, ...userDTO} = result;
+    return userDTO;
   }
 
   /**

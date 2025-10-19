@@ -53,12 +53,12 @@ describe("AuthService", () => {
     it("should register a new user successfully", async () => {
       userRepoMock.findOneBy.mockResolvedValue(null);
       userRepoMock.create.mockImplementation((user: Partial<User>) => user);
-      userRepoMock.save.mockResolvedValue(true);
+      userRepoMock.save.mockResolvedValue({ id });
 
       const result = await authService.handleUserSignUp(id, password);
 
       expect(userRepoMock.findOneBy).toHaveBeenCalledWith({ id });
-      expect(result).toEqual({ message: "User successfully created" });
+      expect(result).toEqual({ id });
     });
 
     it("should throw an error if user already exists", async () => {
