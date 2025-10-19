@@ -16,7 +16,9 @@ services:
     command: npx tsx src/server.ts
     working_dir: /app
     volumes:
-      - ./backend:/app
+      - ./backend/src:/app/src
+      - ./backend/package.json:/app/package.json
+      - ./backend/package-lock.json:/app/package-lock.json
 
   db:
     image: mysql:8.0
