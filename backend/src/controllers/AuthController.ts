@@ -5,16 +5,19 @@ import { Request, Response } from "express";
 import { AppDataSource } from "@root/ormconfig";
 import { User } from "@entities/User";
 
+import { BaseController } from "@controllers/BaseController";
+
 import { AuthService } from "@srv/AuthService";
 import { AuthenticatedRequest } from "@customtypes/authTypes";
 import { Session } from "@entities/Session";
 
 dotenv.config();
 
-export class AuthController {
+export class AuthController extends BaseController {
   private authService: AuthService;
 
   constructor() {
+    super();
     const userRepo = AppDataSource.getRepository(User);
     const sessionRepo = AppDataSource.getRepository(Session);
 
@@ -56,18 +59,17 @@ export class AuthController {
    */
   async info(req: AuthenticatedRequest, res: Response) {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      if (!this.validateAuthenticated(req, res)) return;
+
       // проверяем, есть ли активная сессиия в БД
-      const session = await this.authService.getSessionData(req.user.session);
+      const session = await this.authService.getSessionData(req.user!.session);
       if (!session) {
         return res.status(400).json({ error: "Active session not found" });
       }
 
       // проверяем, есть ли пользователь в БД
       // на случай, если пользователь был удален, а токен еще не протух
-      const user = await this.authService.getUserData(req.user.id);
+      const user = await this.authService.getUserData(req.user!.id);
       if (!user) {
         return res.status(400).json({ error: "User not found" });
       }
@@ -99,11 +101,10 @@ export class AuthController {
 
   async logout(req: AuthenticatedRequest, res: Response) {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      if (!this.validateAuthenticated(req, res)) return;
+
       // проверяем, есть ли активная сессиия в БД
-      const session = await this.authService.getSessionData(req.user.session);
+      const session = await this.authService.getSessionData(req.user!.session);
       if (!session) {
         return res.status(400).json({ error: "Active session not found" });
       }

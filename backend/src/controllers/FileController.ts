@@ -7,18 +7,21 @@ import { IncomingForm, File as FormidableFile } from "formidable";
 import { AppDataSource } from "@root/ormconfig";
 import { File } from "@entities/File";
 
+import { BaseController } from "@controllers/BaseController";
+
 import { FileService } from "@srv/FileService";
 import { FileDTO } from "@customtypes/fileTypes";
 import { AuthenticatedRequest } from "../types/authTypes.js";
 
 dotenv.config();
 
-export class FileController {
+export class FileController extends BaseController {
   private fileService: FileService;
 
   private fileMaxSize: number;
 
   constructor() {
+    super();
     const fileRepo = AppDataSource.getRepository(File);
 
     this.fileService = new FileService(fileRepo);
@@ -86,9 +89,7 @@ export class FileController {
    */
   async getFile(req: AuthenticatedRequest, res: Response) {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      if (!this.validateAuthenticated(req, res)) return;
 
       const { id } = req.params;
       const result: FileDTO | null = await this.fileService.getFile(id);
@@ -106,9 +107,7 @@ export class FileController {
    */
   async getFileList(req: AuthenticatedRequest, res: Response) {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      if (!this.validateAuthenticated(req, res)) return;
 
       const { page: pageStr = "1", list_size: listSizeStr = "10" } = req.query;
       const page = Number(pageStr);
@@ -126,9 +125,8 @@ export class FileController {
    */
   async uploadFile(req: AuthenticatedRequest, res: Response) {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      if (!this.validateAuthenticated(req, res)) return;
+
       const { buffer, file } = await this.parseFile(req);
       const userId = req.user!.id;
 
@@ -165,9 +163,7 @@ export class FileController {
    */
   async updateFile(req: AuthenticatedRequest, res: Response) {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      if (!this.validateAuthenticated(req, res)) return;
 
       const { buffer, file } = await this.parseFile(req);
       const { id } = req.params;
@@ -199,9 +195,8 @@ export class FileController {
    */
   async deleteFile(req: AuthenticatedRequest, res: Response) {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      if (!this.validateAuthenticated(req, res)) return;
+
       const { id } = req.params;
       await this.fileService.handleFileDelete(id);
       return res.status(204).json({ message: "File successfully deleted " });
@@ -217,9 +212,7 @@ export class FileController {
    */
   async downloadFile(req: AuthenticatedRequest, res: Response) {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "unauthorized" });
-      }
+      if (!this.validateAuthenticated(req, res)) return;
 
       const { id } = req.params;
 
