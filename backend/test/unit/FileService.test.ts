@@ -15,6 +15,7 @@ describe("FileService", () => {
       findAndCount: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
+      update: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -28,7 +29,9 @@ describe("FileService", () => {
       const mockedValue = {
         id,
         createdAt: "2025-10-18T14:57:41.565Z",
+        createdById: "test@test.test",
         modifiedAt: "2025-10-18T14:57:41.565Z",
+        modifiedById: "test@test.test",
         filename: "test.txt",
         extension: "txt",
         mimeType: "text/plain",
@@ -78,6 +81,31 @@ describe("FileService", () => {
         size: mockSize,
         files: mockFiles,
       });
+    });
+  });
+
+  describe("handleFileUpdate", () => {
+    it("should update file if file exists", async () => {
+      const mockBuffer = Buffer.from("test file content");
+      const file = {
+        id: "existingId",
+        filename: "test.txt",
+        mimeType: "text/plain",
+        size: 4,
+        data: mockBuffer,
+        modifiedById: "test@test.test",
+      };
+      
+      fileRepoMock.update.mockResolvedValue({ affected: 1 });
+      await expect(fileService.handleFileUpdate(file)).toBeTruthy;
+    });
+
+    it("should throw an error if file is not found", async () => {
+      const id = "unexistringFile";
+      fileRepoMock.delete.mockResolvedValue({ affected: 0 });
+      await expect(fileService.handleFileDelete(id)).rejects.toThrow(
+        "File not found"
+      );
     });
   });
 

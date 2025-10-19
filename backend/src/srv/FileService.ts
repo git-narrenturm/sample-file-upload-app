@@ -8,6 +8,7 @@ import { Request, Response } from "express";
 import { Repository } from "typeorm";
 import { File } from "@entities/File";
 import { FileDTO } from "../types/fileTypes.js";
+import { User } from "../entities/User.js";
 
 dotenv.config();
 
@@ -16,6 +17,17 @@ interface FileInput {
   mimeType: string;
   size: number;
   data: Buffer;
+  createdById: string;
+  modifiedById: string;
+}
+
+interface FileUpdate {
+  id: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  data: Buffer;
+  modifiedById: string;
 }
 
 export class FileService {
@@ -33,10 +45,29 @@ export class FileService {
     return file;
   }
 
+  private async getFileByIdWithData(id: string): Promise<File | null> {
+    const file = await this.fileRepo
+      .createQueryBuilder("f")
+      .addSelect("f.data")
+      .where("f.id = :id", { id })
+      .getOne();
+    if (!file) {
+      return null;
+    }
+    return file;
+  }
+
   /**
    * сохраняет файл
    */
-  async handleFileUpload({ filename, mimeType, size, data }: FileInput) {
+  async handleFileUpload({
+    filename,
+    mimeType,
+    size,
+    data,
+    createdById,
+    modifiedById,
+  }: FileInput) {
     const extension = path.extname(filename).slice(1);
 
     const newFile = this.fileRepo.create({
@@ -45,14 +76,42 @@ export class FileService {
       mimeType,
       size,
       data,
+      createdById,
+      modifiedById,
     });
 
     return await this.fileRepo.save(newFile);
   }
 
-  async handleFileDownload() {}
+  async handleFileDownload(id: string) {
+    return await this.getFileByIdWithData(id);
+  }
 
-  async handleFileUpdate() {}
+  async handleFileUpdate({
+    id,
+    filename,
+    mimeType,
+    size,
+    data,
+    modifiedById,
+  }: FileUpdate) {
+    const extension = path.extname(filename).slice(1);
+
+    const result = await this.fileRepo.update(id, {
+      filename,
+      extension,
+      mimeType,
+      size,
+      data,
+      modifiedById,
+    });
+
+    if (result.affected === 0) {
+      throw new Error("File not found");
+    }
+
+    return true;
+  }
 
   /**
    * удаляет файл по id
@@ -67,7 +126,7 @@ export class FileService {
   }
 
   /**
-   * находит файл по id 
+   * находит файл по id
    */
   async getFile(id: string) {
     return await this.getFileById(id);
