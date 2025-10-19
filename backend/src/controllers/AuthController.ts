@@ -7,6 +7,7 @@ import { User } from "@entities/User";
 
 import { AuthService } from "@srv/AuthService";
 import { AuthenticatedRequest } from "@customtypes/authTypes";
+import { Session } from "../entities/Session.js";
 
 dotenv.config();
 
@@ -15,12 +16,13 @@ export class AuthController {
 
   constructor() {
     const userRepo = AppDataSource.getRepository(User);
+    const sessionRepo = AppDataSource.getRepository(Session)
 
-    this.authService = new AuthService(userRepo);
+    this.authService = new AuthService(userRepo, sessionRepo);
   }
 
   /**
-   * Регистрирует нового пользователя
+   * регистарция нового пользователя
    */
   async signUp(req: Request, res: Response) {
     try {
@@ -35,7 +37,7 @@ export class AuthController {
   }
 
   /**
-   * Аутентификация
+   * аутентификация / авторизация пользователя
    */
   async signIn(req: Request, res: Response) {
     try {
@@ -50,7 +52,7 @@ export class AuthController {
   }
 
   /**
-   * Возврщает id авторизованного пользователя
+   * информация о пользователе
    */
   async info(req: AuthenticatedRequest, res: Response) {
     try {

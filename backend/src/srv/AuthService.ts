@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 
 import { Repository } from "typeorm";
 import { User } from "@entities/User";
+import {Session} from "@entities/Session";
 
 import { UserDTO } from "@customtypes/authTypes";
 
@@ -11,12 +12,14 @@ dotenv.config();
 
 export class AuthService {
   private userRepo: Repository<User>;
+  private sessionRepo: Repository<Session>;
 
   private jwtSecret = process.env.JWT_SECRET!;
   private jwtExpiresIn = (process.env.JWT_EXPIRE as any) || "10m";
 
-  constructor(userRepo: Repository<User>) {
+  constructor(userRepo: Repository<User>, sessionRepo: Repository<Session>) {
     this.userRepo = userRepo;
+    this.sessionRepo = sessionRepo;
   }
 
   // метод для проверки, были ли поданы и логин, и пароль
@@ -92,6 +95,10 @@ export class AuthService {
     if (!hasMatchingPassword) {
       throw new Error("Invalid credentials");
     }
+
+    // создаем сессию
+    const session = this.sessionRepo.create({ user });
+    await this.sessionRepo.save(session);
 
     const token = await this.generateToken(user.id);
     return { ...token };

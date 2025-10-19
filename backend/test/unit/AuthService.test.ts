@@ -7,6 +7,7 @@ import { UserDTO } from "@customtypes/authTypes";
 describe("AuthService", () => {
   let authService: AuthService;
   let userRepoMock: any;
+  let sessionRepoMock: any;
 
   beforeEach(() => {
     userRepoMock = {
@@ -15,7 +16,7 @@ describe("AuthService", () => {
       save: jest.fn(),
     };
 
-    authService = new AuthService(userRepoMock);
+    authService = new AuthService(userRepoMock, sessionRepoMock);
   });
 
   describe("handleUserSignUp", () => {

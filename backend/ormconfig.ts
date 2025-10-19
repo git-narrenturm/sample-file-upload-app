@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import { DataSource } from "typeorm";
 import { User } from "@entities/User";
 import { File } from "@entities/File";
+import { Session } from "@entities/Session";
 
 dotenv.config();
 
@@ -12,7 +13,7 @@ export const AppDataSource = new DataSource({
   username: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
-  entities: [User, File],
+  entities: [User, File, Session],
   synchronize: true,
   logging: false,
 });
