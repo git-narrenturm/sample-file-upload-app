@@ -20,7 +20,9 @@ export class AuthMiddleware {
       const authHeader = req.headers.authorization;
 
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        res.status(401).json({ error: "No token provided" });
+        res
+          .status(401)
+          .json({ message: "Unauthorized", error: "No token provided" });
         return;
       }
 
@@ -29,6 +31,7 @@ export class AuthMiddleware {
 
       req.user = {
         id: decoded.id,
+        session: decoded.session,
       };
 
       next();

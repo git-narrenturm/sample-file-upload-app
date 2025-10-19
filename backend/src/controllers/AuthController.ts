@@ -16,7 +16,7 @@ export class AuthController {
 
   constructor() {
     const userRepo = AppDataSource.getRepository(User);
-    const sessionRepo = AppDataSource.getRepository(Session)
+    const sessionRepo = AppDataSource.getRepository(Session);
 
     this.authService = new AuthService(userRepo, sessionRepo);
   }
@@ -59,11 +59,17 @@ export class AuthController {
       if (!req.user) {
         return res.status(401).json({ error: "Unauthorized" });
       }
+      // проверяем, есть ли активная сессиия в БД
+      const session = await this.authService.getSessionData(req.user.session);
+      if (!session) {
+        return res.status(400).json({ error: "Active session not found" });
+      }
+
       // проверяем, есть ли пользователь в БД
       // на случай, если пользователь был удален, а токен еще не протух
       const user = await this.authService.getUserData(req.user.id);
-      if(!user) {
-        return res.status(400).json({ error: "User not found "});
+      if (!user) {
+        return res.status(400).json({ error: "User not found " });
       }
 
       // возвращаем id пользователя
@@ -75,7 +81,43 @@ export class AuthController {
     }
   }
 
-  async refresh() {}
+  async refresh(req: Request, res: Response) {
+    try {
+      const { refreshToken } = req.body;
 
-  async logout() {}
+      if (!refreshToken) {
+        return res.status(400).json({ error: "Refresh token is required" });
+      }
+
+      const token = await this.authService.handleTokenRefresh(refreshToken);
+
+      return res.status(200).json(token);
+    } catch (err: any) {
+      return res.status(401).json({ error: err.message });
+    }
+  }
+
+  async logout(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      // проверяем, есть ли активная сессиия в БД
+      const session = await this.authService.getSessionData(req.user.session);
+      if (!session) {
+        return res.status(400).json({ error: "Active session not found" });
+      }
+
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const token = authHeader.split(" ")[1];
+      await this.authService.handleUserLogout(token);
+      res.status(200).json({ message: "Logout successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
 }

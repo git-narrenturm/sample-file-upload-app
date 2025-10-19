@@ -1,10 +1,10 @@
 import dotenv from "dotenv";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 import { Repository } from "typeorm";
 import { User } from "@entities/User";
-import {Session} from "@entities/Session";
+import { Session } from "@entities/Session";
 
 import { UserDTO } from "@customtypes/authTypes";
 
@@ -15,7 +15,10 @@ export class AuthService {
   private sessionRepo: Repository<Session>;
 
   private jwtSecret = process.env.JWT_SECRET!;
-  private jwtExpiresIn = (process.env.JWT_EXPIRE as any) || "10m";
+  private jwtExpiresIn = (process.env.JWT_EXPIRES as any) || "10m";
+  private jwtRefreshSecret = process.env.JWT_REFRESH_SECRET!;
+  private jwtRefreshExpiresIn =
+    (process.env.JWT_REFRESH_EXPIRES_IN as any) || "1h";
 
   constructor(userRepo: Repository<User>, sessionRepo: Repository<Session>) {
     this.userRepo = userRepo;
@@ -50,12 +53,16 @@ export class AuthService {
     return userDTO;
   }
 
-  private async generateToken(id: string) {
-    const payload = { id };
+  private async generateToken(userId: string, sessionId: string) {
+    const payload = { id: userId, session: sessionId };
     const accessToken = jwt.sign(payload, this.jwtSecret, {
       expiresIn: this.jwtExpiresIn,
     });
-    return { accessToken };
+
+    const refreshToken = jwt.sign(payload, this.jwtRefreshSecret, {
+      expiresIn: this.jwtRefreshExpiresIn,
+    });
+    return { accessToken, refreshToken };
   }
 
   /**
@@ -100,8 +107,7 @@ export class AuthService {
     const session = this.sessionRepo.create({ user });
     await this.sessionRepo.save(session);
 
-    const token = await this.generateToken(user.id);
-    return { ...token };
+    return await this.generateToken(user.id, session.id);
   }
 
   /**
@@ -111,7 +117,42 @@ export class AuthService {
     return await this.getUserDTOById(id);
   }
 
-  async handleUserLogout() {}
+  /**
+   * находит сессию по id
+   */
+  async getSessionData(id: string) {
+    const session = await this.sessionRepo.findOneBy({ id });
+    if (!session) {
+      return null;
+    }
+    return session;
+  }
 
-  async handleTokenRefresh() {}
+  async handleUserLogout(token: string) {
+    if (!token) {
+      throw new Error("Authorization token is required");
+    }
+
+    const payload: any = jwt.verify(token, this.jwtSecret);
+
+    const result = await this.sessionRepo.delete({ id: payload.session });
+    if (result.affected === 0) {
+      throw new Error("Session not found");
+    }
+
+    return true;
+  }
+
+  async handleTokenRefresh(token: string) {
+    const payload: any = jwt.verify(token, this.jwtRefreshSecret);
+
+    const sessionId = payload.session;
+
+    const session = await this.sessionRepo.findOneBy({ id: sessionId });
+    if (!session) {
+      throw new Error("Session not found");
+    }
+
+    return await this.generateToken(payload.id, session.id);
+  }
 }

@@ -7,5 +7,6 @@ export type UserDTO = Omit<User, "password">;
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
+    session: string;
   };
 }

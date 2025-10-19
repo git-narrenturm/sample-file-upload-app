@@ -9,9 +9,15 @@ const authRoute = (app: Express) => {
 
   app.post("/signup", (req, res) => controller.signUp(req, res));
   app.post("/signin", (req, res) => controller.signIn(req, res));
+  app.post("/signin/new_token", middleware.verifyToken, (req, res) =>
+    controller.refresh(req, res)
+  );
 
   app.get("/info", middleware.verifyToken, (req, res) =>
     controller.info(req, res)
+  );
+  app.get("/logout", middleware.verifyToken, (req, res) =>
+    controller.logout(req, res)
   );
 };
 
