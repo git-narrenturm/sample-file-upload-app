@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 import { Repository } from "typeorm";
@@ -34,8 +34,13 @@ export class AuthService {
   }
 
   // метод для проверки формата логина (email или номер телефона)
-  private validateId(id: string) {}
+  private validateId(id: string) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d{10}$/;
+    return emailRegex.test(id) || phoneRegex.test(id);
+  }
 
+  // метод для получения данных пользователя
   private async getUserById(id: string): Promise<User | null> {
     const user = await this.userRepo.findOneBy({ id });
     if (!user) {
@@ -44,6 +49,7 @@ export class AuthService {
     return user;
   }
 
+  // метод для получения DTO данных пользователя
   private async getUserDTOById(id: string): Promise<UserDTO | null> {
     const user = await this.userRepo.findOneBy({ id });
     if (!user) {
@@ -53,6 +59,7 @@ export class AuthService {
     return userDTO;
   }
 
+  // генерирует токены
   private async generateToken(userId: string, sessionId: string) {
     const payload = { id: userId, session: sessionId };
     const accessToken = jwt.sign(payload, this.jwtSecret, {
@@ -70,6 +77,10 @@ export class AuthService {
    */
   async handleUserSignUp(id: string, password: string) {
     this.validateCredentials(id, password);
+    
+    if (!this.validateId(id)) {
+      throw new Error("Wrong login format");
+    }
 
     // ищем пользователя в БД
     const user = await this.getUserById(id);
@@ -128,6 +139,9 @@ export class AuthService {
     return session;
   }
 
+  /**
+   *
+   */
   async handleUserLogout(token: string) {
     if (!token) {
       throw new Error("Authorization token is required");

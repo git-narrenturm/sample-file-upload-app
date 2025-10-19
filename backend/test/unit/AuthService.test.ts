@@ -35,6 +35,12 @@ describe("AuthService", () => {
     const id = "test@test.test";
     const password = "someStrongPassword";
 
+    it("should throw an error if id is in wrong format", async () => {
+      await expect(
+        authService.handleUserSignUp("test123", password)
+      ).rejects.toThrow("Wrong login format");
+    });
+
     it("should throw an error if id or password is missing", async () => {
       await expect(authService.handleUserSignUp("", password)).rejects.toThrow(
         "ID and password are required"
